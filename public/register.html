@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Register</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <span id="auth-links">
+                <a href="login.html">Login</a>
+                <a href="register.html">Register</a>
+            </span>
+            <span id="user-info" style="display: none;">
+                Welcome, <span id="username-display"></span>!
+                <a href="create-recipe.html">Create Recipe</a>
+                <button id="logout-button">Logout</button>
+            </span>
+        </nav>
+    </header>
+    <main>
+        <form id="register-form">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Register</button>
+            <p id="message"></p>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Recipes</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const registerForm = document.getElementById('register-form');
+            const messageElement = document.getElementById('message');
+
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const username = registerForm.username.value;
+                const password = registerForm.password.value;
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await response.json();
+                    messageElement.textContent = data.message;
+                    if (response.ok) {
+                        messageElement.classList.remove('error');
+                        messageElement.classList.add('success');
+                        registerForm.reset();
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 1500);
+                    } else {
+                        messageElement.classList.remove('success');
+                        messageElement.classList.add('error');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    messageElement.textContent = 'Network error. Please try again later.';
+                    messageElement.classList.remove('success');
+                    messageElement.classList.add('error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

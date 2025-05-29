@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Details</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Recipe Details</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <span id="auth-links">
+                <a href="login.html">Login</a>
+                <a href="register.html">Register</a>
+            </span>
+            <span id="user-info" style="display: none;">
+                Welcome, <span id="username-display"></span>!
+                <a href="create-recipe.html">Create Recipe</a>
+                <button id="logout-button">Logout</button>
+            </span>
+        </nav>
+    </header>
+    <main id="recipe-detail">
+        <p>Loading recipe details...</p>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Recipes</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const recipeId = params.get('id');
+            const recipeDetail = document.getElementById('recipe-detail');
+
+            if (recipeId) {
+                fetch(`http://localhost:3000/api/recipes/${recipeId}`)
+                    .then(response => response.json())
+                    .then(recipe => {
+                        if (recipe.message) {
+                            recipeDetail.innerHTML = `<p>${recipe.message}</p>`;
+                            return;
+                        }
+                        recipeDetail.innerHTML = `
+                            <h2>${recipe.title}</h2>
+                            ${recipe.image_url ? `<img src="${recipe.image_url}" alt="${recipe.title}" class="recipe-image">` : ''}
+                            <p class="author">By: ${recipe.username}</p>
+                            <h3>Ingredients:</h3>
+                            <pre>${recipe.ingredients}</pre>
+                            <h3>Instructions:</h3>
+                            <pre>${recipe.instructions}</pre>
+                            <p><em>Created on: ${new Date(recipe.created_at).toLocaleDateString()}</em></p>
+                        `;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching recipe:', error);
+                        recipeDetail.innerHTML = '<p>Failed to load recipe. Please try again later.</p>';
+                    });
+            } else {
+                recipeDetail.innerHTML = '<p>Recipe ID not specified.</p>';
+            }
+        });
+    </script>
+</body>
+</html>

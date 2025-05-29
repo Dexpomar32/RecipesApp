@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Recipe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Create New Recipe</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <span id="auth-links">
+                <a href="login.html">Login</a>
+                <a href="register.html">Register</a>
+            </span>
+            <span id="user-info" style="display: none;">
+                Welcome, <span id="username-display"></span>!
+                <a href="create-recipe.html">Create Recipe</a>
+                <button id="logout-button">Logout</button>
+            </span>
+        </nav>
+    </header>
+    <main>
+        <form id="create-recipe-form" enctype="multipart/form-data">
+            <label for="title">Recipe Title:</label>
+            <input type="text" id="title" name="title" required>
+
+            <label for="short_description">Short Description:</label>
+            <textarea id="short_description" name="short_description" rows="3"></textarea>
+
+            <label for="image">Image:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+
+            <label for="ingredients">Ingredients (each on a new line):</label>
+            <textarea id="ingredients" name="ingredients" rows="8" required></textarea>
+
+            <label for="instructions">Instructions (each step on a new line):</label>
+            <textarea id="instructions" name="instructions" rows="10" required></textarea>
+
+            <button type="submit">Create Recipe</button>
+            <p id="message"></p>
+        </form>
+    </main>
+    <footer>
+        <p>&copy; 2025 My Recipes</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const createRecipeForm = document.getElementById('create-recipe-form');
+            const messageElement = document.getElementById('message');
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('You need to be logged in to create a recipe.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            createRecipeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const formData = new FormData();
+                formData.append('title', createRecipeForm.title.value);
+                formData.append('short_description', createRecipeForm.short_description.value);
+                formData.append('ingredients', createRecipeForm.ingredients.value);
+                formData.append('instructions', createRecipeForm.instructions.value);
+
+                const imageInput = createRecipeForm.image;
+                if (imageInput.files && imageInput.files[0]) {
+                    formData.append('image', imageInput.files[0]);
+                }
+
+                try {
+                    const response = await fetch('http://localhost:3000/api/recipes', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    });
+                    const data = await response.json();
+                    messageElement.textContent = data.message;
+                    if (response.ok) {
+                        messageElement.classList.remove('error');
+                        messageElement.classList.add('success');
+                        createRecipeForm.reset();
+                        setTimeout(() => {
+                            window.location.href = 'index.html';
+                        }, 1500);
+                    } else {
+                        messageElement.classList.remove('success');
+                        messageElement.classList.add('error');
+                        if (response.status === 401 || response.status === 403) {
+                            alert('Your session has expired or is invalid. Please log in again.');
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('username');
+                            window.location.href = 'login.html';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    messageElement.textContent = 'Network error. Please try again later.';
+                    messageElement.classList.remove('success');
+                    messageElement.classList.add('error');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
